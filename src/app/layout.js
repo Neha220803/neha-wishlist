@@ -13,7 +13,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Neha Wishlist Tracker",
-  description: "Wishlist tracker specially created for Neha by Neha",
+  description:
+    "A visual progress tracker created for myself to stay motivated while saving for the things I want to buy",
   icons: {
     icon: "/logo-bg.png",
   },
