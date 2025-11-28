@@ -1,3 +1,3 @@
 export default function Home() {
-  return <div className="">Wishlist website</div>;
+  return <div className="">Wishlist website Home Page</div>;
 }
