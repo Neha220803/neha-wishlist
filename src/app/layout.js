@@ -13,7 +13,10 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Neha Wishlist Tracker",
-  description: "Wishlist tracker speacily created for neha by neha",
+  description: "Wishlist tracker specially created for Neha by Neha",
+  icons: {
+    icon: "/logo-bg.png",
+  },
 };
 
 export default function RootLayout({ children }) {
