@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Moon, Sun, Receipt, Home, Plus, Wallet } from "lucide-react";
 import { AddTransactionDialog } from "@/components/transactions/AddTransactionDialog";
 import { AllocateMoneyDialog } from "@/components/transactions/AllocateMoneyDialog";
-
+const imglogo = "/logo.png";
 export function Navbar({ onUpdate }) {
   const pathname = usePathname();
   const [theme, setTheme] = useState("light");
@@ -30,16 +30,20 @@ export function Navbar({ onUpdate }) {
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4">
+      <div className="container max-w-7xl overflow-hidden mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand */}
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <Wallet className="w-5 h-5 text-primary" />
+                <img
+                  src={imglogo}
+                  alt="Logo"
+                  className="h-8 w-8 object-contain"
+                />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Wishlist
+                Neha's Wishlist Tracker
               </span>
             </Link>
 

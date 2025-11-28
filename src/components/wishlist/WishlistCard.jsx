@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Target, TrendingUp } from "lucide-react";
 import { EditItemDialog } from "./EditItemDialog";
 import { calculateProgress } from "@/lib/data-manager";
+import { Progress } from "@/components/ui/progress";
 
 export function WishlistCard({ item, onUpdate }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -15,9 +16,9 @@ export function WishlistCard({ item, onUpdate }) {
   const remaining = item.targetPrice - allocatedAmount;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       minimumFractionDigits: 2,
     }).format(amount);
   };
@@ -46,7 +47,7 @@ export function WishlistCard({ item, onUpdate }) {
   return (
     <>
       <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-        <CardContent className="p-6">
+        <CardContent>
           {/* Header with Icon and Edit Button */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -127,12 +128,10 @@ export function WishlistCard({ item, onUpdate }) {
                 {progress.toFixed(1)}%
               </span>
             </div>
-            <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-              <div
-                className={`absolute h-full ${getProgressColor()} transition-all duration-500 ease-out rounded-full`}
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              >
-                {/* Shimmer Effect */}
+            <div className="relative">
+              <Progress value={Math.min(progress, 100)} className="h-3" />
+              {/* Shimmer Effect Overlay */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
               </div>
             </div>

@@ -128,7 +128,7 @@ export function AddTransactionDialog({ onTransactionAdded, trigger }) {
                 htmlFor="amount"
                 className="text-sm font-medium mb-2 block"
               >
-                Amount ($)
+                Amount (₹)
               </label>
               <input
                 id="amount"

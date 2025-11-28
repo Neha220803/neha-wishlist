@@ -14,6 +14,7 @@ import { Trash2 } from "lucide-react";
 import { updateWishlistItem, deleteWishlistItem } from "@/lib/data-manager";
 import { PRIORITY_LEVELS, CATEGORIES } from "@/lib/constants";
 import { PinVerification } from "@/components/shared/PinVerification";
+import { ScrollArea } from "../ui/scroll-area";
 
 const EMOJI_OPTIONS = [
   "💻",
@@ -60,8 +61,9 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
     notes: "",
   });
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showDeletePin, setShowDeletePin] = useState(false);
   const [showSavePin, setShowSavePin] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeletePin, setShowDeletePin] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingChanges, setPendingChanges] = useState(null);
 
@@ -86,6 +88,13 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
     }));
   };
 
+  const handleClose = () => {
+    setShowEmojiPicker(false);
+    setShowEditDialog(false);
+    setPendingChanges(null);
+    onClose();
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -100,8 +109,9 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
       return;
     }
 
-    // Store changes and show PIN
-    setPendingChanges({
+    setIsSubmitting(true);
+
+    updateWishlistItem(item.id, {
       name: formData.name.trim(),
       icon: formData.icon,
       targetPrice: price,
@@ -109,7 +119,13 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
       category: formData.category,
       notes: formData.notes.trim(),
     });
-    setShowSavePin(true);
+
+    setIsSubmitting(false);
+    handleClose();
+
+    if (onUpdate) {
+      onUpdate();
+    }
   };
 
   const handleSaveConfirm = () => {
@@ -139,206 +155,210 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
     }
   };
 
-  const handleClose = () => {
-    setShowEmojiPicker(false);
-    setPendingChanges(null);
-    onClose();
-  };
-
   if (!item) return null;
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <form onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>Edit Wishlist Item</DialogTitle>
-              <DialogDescription>
-                Make changes to your wishlist item
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-4">
-              {/* Allocated Amount Info */}
-              <div className="p-3 bg-muted rounded-lg">
-                <div className="text-xs text-muted-foreground mb-1">
-                  Current Savings
-                </div>
-                <div className="text-lg font-bold text-primary">
-                  ${(item.allocatedAmount || 0).toFixed(2)}
-                </div>
-              </div>
-
-              {/* Icon Picker */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Icon</label>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="text-5xl p-3 border-2 border-dashed border-border rounded-lg hover:border-primary transition-colors"
-                  >
-                    {formData.icon}
-                  </button>
-                  <div className="flex-1 text-xs text-muted-foreground">
-                    Click to choose a different icon
+      {/* PIN Verification First */}
+      <PinVerification
+        isOpen={isOpen && !showEditDialog}
+        onClose={onClose}
+        onSuccess={() => setShowEditDialog(true)}
+        title="Verify Identity"
+        description="Enter your PIN to edit this item"
+      />
+      <Dialog open={showEditDialog} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Edit Wishlist Item</DialogTitle>
+            <DialogDescription>
+              Make changes to your wishlist item
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] px-6">
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4 py-4">
+                {/* Allocated Amount Info */}
+                <div className="p-3 bg-muted rounded-lg">
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Current Savings
+                  </div>
+                  <div className="text-lg font-bold text-primary">
+                    ${(item.allocatedAmount || 0).toFixed(2)}
                   </div>
                 </div>
 
-                {showEmojiPicker && (
-                  <div className="mt-3 p-3 border rounded-lg bg-muted/50 grid grid-cols-8 gap-2 max-h-40 overflow-y-auto">
-                    {EMOJI_OPTIONS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => {
-                          handleChange("icon", emoji);
-                          setShowEmojiPicker(false);
-                        }}
-                        className="text-2xl p-2 hover:bg-background rounded transition-colors"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
+                {/* Icon Picker */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Icon</label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="text-5xl p-3 border-2 border-dashed border-border rounded-lg hover:border-primary transition-colors"
+                    >
+                      {formData.icon}
+                    </button>
+                    <div className="flex-1 text-xs text-muted-foreground">
+                      Click to choose a different icon
+                    </div>
                   </div>
-                )}
-              </div>
 
-              {/* Item Name */}
-              <div>
-                <label
-                  htmlFor="edit-name"
-                  className="text-sm font-medium mb-2 block"
-                >
-                  Item Name *
-                </label>
-                <input
-                  id="edit-name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                  placeholder="e.g., MacBook Pro, New Shoes"
-                  required
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
-
-              {/* Target Price */}
-              <div>
-                <label
-                  htmlFor="edit-targetPrice"
-                  className="text-sm font-medium mb-2 block"
-                >
-                  Target Price ($) *
-                </label>
-                <input
-                  id="edit-targetPrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.targetPrice}
-                  onChange={(e) => handleChange("targetPrice", e.target.value)}
-                  placeholder="0.00"
-                  required
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
-
-              {/* Category and Priority */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="edit-category"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Category
-                  </label>
-                  <select
-                    id="edit-category"
-                    value={formData.category}
-                    onChange={(e) => handleChange("category", e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                  {showEmojiPicker && (
+                    <div className="mt-3 p-3 border rounded-lg bg-muted/50 grid grid-cols-8 gap-2 max-h-40 overflow-y-auto">
+                      {EMOJI_OPTIONS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            handleChange("icon", emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                          className="text-2xl p-2 hover:bg-background rounded transition-colors"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
+                {/* Item Name */}
                 <div>
                   <label
-                    htmlFor="edit-priority"
+                    htmlFor="edit-name"
                     className="text-sm font-medium mb-2 block"
                   >
-                    Priority
+                    Item Name *
                   </label>
-                  <select
-                    id="edit-priority"
-                    value={formData.priority}
-                    onChange={(e) => handleChange("priority", e.target.value)}
+                  <input
+                    id="edit-name"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    placeholder="e.g., MacBook Pro, New Shoes"
+                    required
                     className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+
+                {/* Target Price */}
+                <div>
+                  <label
+                    htmlFor="edit-targetPrice"
+                    className="text-sm font-medium mb-2 block"
                   >
-                    <option value={PRIORITY_LEVELS.LOW}>Low</option>
-                    <option value={PRIORITY_LEVELS.MEDIUM}>Medium</option>
-                    <option value={PRIORITY_LEVELS.HIGH}>High</option>
-                  </select>
+                    Target Price (₹) *
+                  </label>
+                  <input
+                    id="edit-targetPrice"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.targetPrice}
+                    onChange={(e) =>
+                      handleChange("targetPrice", e.target.value)
+                    }
+                    placeholder="0.00"
+                    required
+                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+
+                {/* Category and Priority */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="edit-category"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Category
+                    </label>
+                    <select
+                      id="edit-category"
+                      value={formData.category}
+                      onChange={(e) => handleChange("category", e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    >
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="edit-priority"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Priority
+                    </label>
+                    <select
+                      id="edit-priority"
+                      value={formData.priority}
+                      onChange={(e) => handleChange("priority", e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    >
+                      <option value={PRIORITY_LEVELS.LOW}>Low</option>
+                      <option value={PRIORITY_LEVELS.MEDIUM}>Medium</option>
+                      <option value={PRIORITY_LEVELS.HIGH}>High</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label
+                    htmlFor="edit-notes"
+                    className="text-sm font-medium mb-2 block"
+                  >
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    id="edit-notes"
+                    value={formData.notes}
+                    onChange={(e) => handleChange("notes", e.target.value)}
+                    placeholder="Any additional details..."
+                    rows={3}
+                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
+                  />
                 </div>
               </div>
+            </form>
+          </ScrollArea>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteClick}
+              disabled={isSubmitting}
+              className="gap-2 sm:mr-auto"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Item
+            </Button>
 
-              {/* Notes */}
-              <div>
-                <label
-                  htmlFor="edit-notes"
-                  className="text-sm font-medium mb-2 block"
-                >
-                  Notes (Optional)
-                </label>
-                <textarea
-                  id="edit-notes"
-                  value={formData.notes}
-                  onChange={(e) => handleChange("notes", e.target.value)}
-                  placeholder="Any additional details..."
-                  rows={3}
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="flex-col sm:flex-row gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 type="button"
-                variant="destructive"
-                onClick={handleDeleteClick}
+                variant="outline"
+                onClick={handleClose}
                 disabled={isSubmitting}
-                className="gap-2 sm:mr-auto"
+                className="flex-1 sm:flex-none"
               >
-                <Trash2 className="w-4 h-4" />
-                Delete Item
+                Cancel
               </Button>
-
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                  className="flex-1 sm:flex-none"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 sm:flex-none"
-                >
-                  {isSubmitting ? "Saving..." : "Save Changes"}
-                </Button>
-              </div>
-            </DialogFooter>
-          </form>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none"
+              >
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

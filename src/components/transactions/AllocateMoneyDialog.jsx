@@ -11,7 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Split, AlertCircle, Check } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Split, AlertCircle } from "lucide-react";
 import {
   getWishlistItems,
   allocateMoneyToItem,
@@ -233,20 +234,18 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
                       </div>
 
                       {/* Progress Bar */}
-                      <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="absolute h-full bg-primary transition-all"
-                          style={{
-                            width: `${Math.min(
-                              ((item.allocatedAmount || 0) / item.targetPrice) *
-                                100,
-                              100
-                            )}%`,
-                          }}
+                      <div className="relative">
+                        <Progress
+                          value={Math.min(
+                            ((item.allocatedAmount || 0) / item.targetPrice) *
+                              100,
+                            100
+                          )}
+                          className="h-2"
                         />
                         {currentAllocation > 0 && (
                           <div
-                            className="absolute h-full bg-green-500 opacity-50"
+                            className="absolute top-0 h-2 bg-green-500/50 rounded-full transition-all"
                             style={{
                               left: `${Math.min(
                                 ((item.allocatedAmount || 0) /

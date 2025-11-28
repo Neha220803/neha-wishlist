@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Wallet, TrendingUp, DollarSign, PiggyBank } from "lucide-react";
+import { Wallet, TrendingUp, PiggyBank, IndianRupeeIcon } from "lucide-react";
 
 export function MoneyDisplay({ moneyData, allocatedAmount = 0 }) {
   const { totalLiquid = 0, totalNonLiquid = 0 } = moneyData || {};
@@ -10,9 +10,9 @@ export function MoneyDisplay({ moneyData, allocatedAmount = 0 }) {
   const unallocatedMoney = totalMoney - allocatedAmount;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       minimumFractionDigits: 2,
     }).format(amount);
   };
@@ -21,7 +21,7 @@ export function MoneyDisplay({ moneyData, allocatedAmount = 0 }) {
     {
       title: "Total Savings",
       amount: totalMoney,
-      icon: DollarSign,
+      icon: IndianRupeeIcon,
       gradient: "from-primary/20 to-primary/5",
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
@@ -65,7 +65,7 @@ export function MoneyDisplay({ moneyData, allocatedAmount = 0 }) {
             key={card.title}
             className={`relative overflow-hidden bg-gradient-to-br ${card.gradient} border-none shadow-sm hover:shadow-md transition-all`}
           >
-            <CardContent className="p-6">
+            <CardContent>
               <div className="flex items-start justify-between mb-4">
                 <div className={`p-2.5 rounded-lg ${card.iconBg}`}>
                   <Icon className={`w-5 h-5 ${card.iconColor}`} />
