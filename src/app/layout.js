@@ -18,6 +18,29 @@ export const metadata = {
   icons: {
     icon: "/logo-bg.png",
   },
+  openGraph: {
+    title: "Neha Wishlist Tracker",
+    description:
+      "A visual progress tracker created for myself to stay motivated while saving for the things I want to buy",
+    url: "https://neha-wishlist.vercel.app/",
+    siteName: "Neha Wishlist Tracker",
+    images: [
+      {
+        url: "https://neha-wishlist.vercel.app/logo-bg.png", // Use absolute URL
+        width: 1200,
+        height: 630,
+        alt: "Neha Wishlist Tracker Logo",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Neha Wishlist Tracker",
+    description:
+      "A visual progress tracker created for myself to stay motivated while saving for the things I want to buy",
+    images: ["https://neha-wishlist.vercel.app/logo-bg.png"], // Use absolute URL
+  },
 };
 
 export default function RootLayout({ children }) {
