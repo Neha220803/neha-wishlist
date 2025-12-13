@@ -8,24 +8,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Plus, Wallet, TrendingUp } from "lucide-react";
 import { addTransaction } from "@/lib/data-manager";
 import { MONEY_TYPES } from "@/lib/constants";
+import { PinVerification } from "@/components/shared/PinVerification";
 
 export function AddTransactionDialog({ onTransactionAdded, trigger }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showTransactionDialog, setShowTransactionDialog] = useState(false);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [moneyType, setMoneyType] = useState(MONEY_TYPES.LIQUID);
   const [transactionType, setTransactionType] = useState("addition");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  const handleSubmit = () => {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
       alert("Please enter a valid amount");
@@ -50,6 +51,7 @@ export function AddTransactionDialog({ onTransactionAdded, trigger }) {
     setMoneyType(MONEY_TYPES.LIQUID);
     setTransactionType("addition");
     setIsSubmitting(false);
+    setShowTransactionDialog(false);
     setIsOpen(false);
 
     if (onTransactionAdded) {
@@ -62,22 +64,38 @@ export function AddTransactionDialog({ onTransactionAdded, trigger }) {
     setDescription("");
     setMoneyType(MONEY_TYPES.LIQUID);
     setTransactionType("addition");
+    setShowTransactionDialog(false);
     setIsOpen(false);
   };
 
+  const handleTriggerClick = () => {
+    setIsOpen(true);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <>
+      {/* Trigger Button */}
+      <div onClick={handleTriggerClick}>
         {trigger || (
-          <Button>
+          <Button className="gap-2">
             <Plus className="w-4 h-4" />
             Add Transaction
           </Button>
         )}
-      </DialogTrigger>
+      </div>
 
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+      {/* PIN Verification First */}
+      <PinVerification
+        isOpen={isOpen && !showTransactionDialog}
+        onClose={() => setIsOpen(false)}
+        onSuccess={() => setShowTransactionDialog(true)}
+        title="Verify Identity"
+        description="Enter your PIN to add a transaction"
+      />
+
+      {/* Add Transaction Dialog */}
+      <Dialog open={showTransactionDialog} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Transaction</DialogTitle>
             <DialogDescription>
@@ -87,50 +105,47 @@ export function AddTransactionDialog({ onTransactionAdded, trigger }) {
 
           <div className="space-y-4 py-4">
             {/* Transaction Type */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Transaction Type
-              </label>
+            <div className="space-y-2">
+              <Label>Transaction Type</Label>
               <div className="grid grid-cols-2 gap-2">
-                <button
+                <Button
                   type="button"
+                  variant={
+                    transactionType === "addition" ? "default" : "outline"
+                  }
                   onClick={() => setTransactionType("addition")}
-                  className={`p-3 rounded-lg border-2 text-left transition-all ${
+                  className={`h-auto py-3 flex-col items-start ${
                     transactionType === "addition"
-                      ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                      : "border-border hover:border-green-300"
+                      ? "bg-green-600 hover:bg-green-700 border-green-600"
+                      : "hover:border-green-300 "
                   }`}
                 >
                   <div className="font-medium text-sm">Addition</div>
-                  <div className="text-xs text-muted-foreground">Add money</div>
-                </button>
+                  <div className="text-xs opacity-80">Add money</div>
+                </Button>
 
-                <button
+                <Button
                   type="button"
+                  variant={
+                    transactionType === "deduction" ? "default" : "outline"
+                  }
                   onClick={() => setTransactionType("deduction")}
-                  className={`p-3 rounded-lg border-2 text-left transition-all ${
+                  className={`h-auto py-3 flex-col items-start ${
                     transactionType === "deduction"
-                      ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                      : "border-border hover:border-red-300"
+                      ? "bg-red-600 hover:bg-red-700 border-red-600"
+                      : "hover:border-red-300"
                   }`}
                 >
                   <div className="font-medium text-sm">Deduction</div>
-                  <div className="text-xs text-muted-foreground">
-                    Remove money
-                  </div>
-                </button>
+                  <div className="text-xs opacity-80">Remove money</div>
+                </Button>
               </div>
             </div>
 
             {/* Amount */}
-            <div>
-              <label
-                htmlFor="amount"
-                className="text-sm font-medium mb-2 block"
-              >
-                Amount (₹)
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount (₹)</Label>
+              <Input
                 id="amount"
                 type="number"
                 step="0.01"
@@ -139,69 +154,55 @@ export function AddTransactionDialog({ onTransactionAdded, trigger }) {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
                 required
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none text-lg"
+                className="text-lg"
               />
             </div>
 
             {/* Money Type */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Money Type
-              </label>
+            <div className="space-y-2">
+              <Label>Money Type</Label>
               <div className="grid grid-cols-2 gap-2">
-                <button
+                <Button
                   type="button"
+                  variant={
+                    moneyType === MONEY_TYPES.LIQUID ? "default" : "outline"
+                  }
                   onClick={() => setMoneyType(MONEY_TYPES.LIQUID)}
-                  className={`p-3 rounded-lg border-2 flex items-center gap-2 transition-all ${
-                    moneyType === MONEY_TYPES.LIQUID
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50"
-                  }`}
+                  className="h-auto py-3 justify-start"
                 >
-                  <Wallet className="w-4 h-4" />
+                  <Wallet className="w-4 h-4 mr-2" />
                   <div className="text-left flex-1">
                     <div className="font-medium text-sm">Liquid</div>
-                    <div className="text-xs text-muted-foreground">
-                      Cash/Bank
-                    </div>
+                    <div className="text-xs opacity-80">Cash/Bank</div>
                   </div>
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
+                  variant={
+                    moneyType === MONEY_TYPES.NON_LIQUID ? "default" : "outline"
+                  }
                   onClick={() => setMoneyType(MONEY_TYPES.NON_LIQUID)}
-                  className={`p-3 rounded-lg border-2 flex items-center gap-2 transition-all ${
-                    moneyType === MONEY_TYPES.NON_LIQUID
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50"
-                  }`}
+                  className="h-auto py-3 justify-start"
                 >
-                  <TrendingUp className="w-4 h-4" />
+                  <TrendingUp className="w-4 h-4 mr-2" />
                   <div className="text-left flex-1">
                     <div className="font-medium text-sm">Non-Liquid</div>
-                    <div className="text-xs text-muted-foreground">
-                      Stocks/Assets
-                    </div>
+                    <div className="text-xs opacity-80">Stocks/Assets</div>
                   </div>
-                </button>
+                </Button>
               </div>
             </div>
 
             {/* Description */}
-            <div>
-              <label
-                htmlFor="description"
-                className="text-sm font-medium mb-2 block"
-              >
-                Description (Optional)
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Input
                 id="description"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="e.g., Monthly savings, Sold stocks, etc."
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
               />
             </div>
           </div>
@@ -215,12 +216,16 @@ export function AddTransactionDialog({ onTransactionAdded, trigger }) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Adding..." : "Add Transaction"}
             </Button>
           </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

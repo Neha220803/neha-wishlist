@@ -8,9 +8,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Split, AlertCircle } from "lucide-react";
 import {
@@ -19,9 +20,11 @@ import {
   getUnallocatedMoney,
   getMoneyData,
 } from "@/lib/data-manager";
+import { PinVerification } from "@/components/shared/PinVerification";
 
 export function AllocateMoneyDialog({ onAllocated, trigger }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showAllocateDialog, setShowAllocateDialog] = useState(false);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [allocations, setAllocations] = useState({});
   const [unallocatedMoney, setUnallocatedMoney] = useState(0);
@@ -29,10 +32,10 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (showAllocateDialog) {
       loadData();
     }
-  }, [isOpen]);
+  }, [showAllocateDialog]);
 
   const loadData = () => {
     const items = getWishlistItems();
@@ -82,9 +85,7 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
     setAllocations(newAllocations);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  const handleSubmit = () => {
     const totalAllocating = getTotalAllocating();
 
     if (totalAllocating > unallocatedMoney) {
@@ -107,6 +108,7 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
     });
 
     setIsSubmitting(false);
+    setShowAllocateDialog(false);
     setIsOpen(false);
 
     if (onAllocated) {
@@ -116,25 +118,41 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
 
   const handleClose = () => {
     setAllocations({});
+    setShowAllocateDialog(false);
     setIsOpen(false);
+  };
+
+  const handleTriggerClick = () => {
+    setIsOpen(true);
   };
 
   const remaining = getRemainingMoney();
   const isOverAllocated = remaining < 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <>
+      {/* Trigger Button */}
+      <div onClick={handleTriggerClick}>
         {trigger || (
-          <Button variant="outline">
+          <Button variant="outline" className="gap-2">
             <Split className="w-4 h-4" />
             Allocate Money
           </Button>
         )}
-      </DialogTrigger>
+      </div>
 
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-        <form onSubmit={handleSubmit}>
+      {/* PIN Verification First */}
+      <PinVerification
+        isOpen={isOpen && !showAllocateDialog}
+        onClose={() => setIsOpen(false)}
+        onSuccess={() => setShowAllocateDialog(true)}
+        title="Verify Identity"
+        description="Enter your PIN to allocate money"
+      />
+
+      {/* Allocate Money Dialog */}
+      <Dialog open={showAllocateDialog} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Allocate Money to Wishlist Items</DialogTitle>
             <DialogDescription>
@@ -148,13 +166,13 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
               <div>
                 <div className="text-xs text-muted-foreground">Total Money</div>
                 <div className="text-lg font-bold">
-                  ${totalMoney.toFixed(2)}
+                  ₹{totalMoney.toFixed(2)}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-muted-foreground">Unallocated</div>
                 <div className="text-lg font-bold text-primary">
-                  ${unallocatedMoney.toFixed(2)}
+                  ₹{unallocatedMoney.toFixed(2)}
                 </div>
               </div>
               <div>
@@ -166,7 +184,7 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
                       : "text-green-600 dark:text-green-400"
                   }`}
                 >
-                  ${remaining.toFixed(2)}
+                  ₹{remaining.toFixed(2)}
                 </div>
               </div>
             </div>
@@ -177,7 +195,7 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
                 type="button"
                 variant="outline"
                 onClick={handleAutoSplit}
-                className="w-full"
+                className="w-full gap-2"
               >
                 <Split className="w-4 h-4" />
                 Auto-Split Equally
@@ -209,17 +227,17 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
                             <h4 className="font-medium">{item.name}</h4>
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Target: ${item.targetPrice} • Current: $
-                            {(item.allocatedAmount || 0).toFixed(2)} • Need: $
+                            Target: ₹{item.targetPrice.toFixed(2)} • Current: ₹
+                            {(item.allocatedAmount || 0).toFixed(2)} • Need: ₹
                             {remaining.toFixed(2)}
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">
-                            $
-                          </span>
-                          <input
+                          <Label className="text-sm text-muted-foreground">
+                            ₹
+                          </Label>
+                          <Input
                             type="number"
                             step="0.01"
                             min="0"
@@ -228,7 +246,7 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
                               handleAllocationChange(item.id, e.target.value)
                             }
                             placeholder="0.00"
-                            className="w-24 px-3 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none text-right"
+                            className="w-24 text-right"
                           />
                         </div>
                       </div>
@@ -289,7 +307,8 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
               Cancel
             </Button>
             <Button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={
                 isSubmitting || isOverAllocated || getTotalAllocating() === 0
               }
@@ -297,8 +316,8 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
               {isSubmitting ? "Allocating..." : "Allocate Money"}
             </Button>
           </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

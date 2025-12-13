@@ -10,6 +10,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
 import { updateWishlistItem, deleteWishlistItem } from "@/lib/data-manager";
 import { PRIORITY_LEVELS, CATEGORIES } from "@/lib/constants";
@@ -95,9 +105,7 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
     onClose();
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  const handleSubmit = () => {
     if (!formData.name.trim()) {
       alert("Please enter an item name");
       return;
@@ -176,157 +184,136 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh] px-6">
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4 py-4">
-                {/* Allocated Amount Info */}
-                <div className="p-3 bg-muted rounded-lg">
-                  <div className="text-xs text-muted-foreground mb-1">
-                    Current Savings
-                  </div>
-                  <div className="text-lg font-bold text-primary">
-                    ${(item.allocatedAmount || 0).toFixed(2)}
-                  </div>
+            <div className="space-y-4 py-4">
+              {/* Allocated Amount Info */}
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-xs text-muted-foreground mb-1">
+                  Current Savings
                 </div>
-
-                {/* Icon Picker */}
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Icon</label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="text-5xl p-3 border-2 border-dashed border-border rounded-lg hover:border-primary transition-colors"
-                    >
-                      {formData.icon}
-                    </button>
-                    <div className="flex-1 text-xs text-muted-foreground">
-                      Click to choose a different icon
-                    </div>
-                  </div>
-
-                  {showEmojiPicker && (
-                    <div className="mt-3 p-3 border rounded-lg bg-muted/50 grid grid-cols-8 gap-2 max-h-40 overflow-y-auto">
-                      {EMOJI_OPTIONS.map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={() => {
-                            handleChange("icon", emoji);
-                            setShowEmojiPicker(false);
-                          }}
-                          className="text-2xl p-2 hover:bg-background rounded transition-colors"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Item Name */}
-                <div>
-                  <label
-                    htmlFor="edit-name"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Item Name *
-                  </label>
-                  <input
-                    id="edit-name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleChange("name", e.target.value)}
-                    placeholder="e.g., MacBook Pro, New Shoes"
-                    required
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                  />
-                </div>
-
-                {/* Target Price */}
-                <div>
-                  <label
-                    htmlFor="edit-targetPrice"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Target Price (₹) *
-                  </label>
-                  <input
-                    id="edit-targetPrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.targetPrice}
-                    onChange={(e) =>
-                      handleChange("targetPrice", e.target.value)
-                    }
-                    placeholder="0.00"
-                    required
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                  />
-                </div>
-
-                {/* Category and Priority */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor="edit-category"
-                      className="text-sm font-medium mb-2 block"
-                    >
-                      Category
-                    </label>
-                    <select
-                      id="edit-category"
-                      value={formData.category}
-                      onChange={(e) => handleChange("category", e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                    >
-                      {CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="edit-priority"
-                      className="text-sm font-medium mb-2 block"
-                    >
-                      Priority
-                    </label>
-                    <select
-                      id="edit-priority"
-                      value={formData.priority}
-                      onChange={(e) => handleChange("priority", e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                    >
-                      <option value={PRIORITY_LEVELS.LOW}>Low</option>
-                      <option value={PRIORITY_LEVELS.MEDIUM}>Medium</option>
-                      <option value={PRIORITY_LEVELS.HIGH}>High</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label
-                    htmlFor="edit-notes"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Notes (Optional)
-                  </label>
-                  <textarea
-                    id="edit-notes"
-                    value={formData.notes}
-                    onChange={(e) => handleChange("notes", e.target.value)}
-                    placeholder="Any additional details..."
-                    rows={3}
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
-                  />
+                <div className="text-lg font-bold text-primary">
+                  ₹{(item.allocatedAmount || 0).toFixed(2)}
                 </div>
               </div>
-            </form>
+
+              {/* Icon Picker */}
+              <div className="space-y-2">
+                <Label>Icon</Label>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="text-5xl h-auto p-3 border-2 border-dashed hover:border-primary"
+                  >
+                    {formData.icon}
+                  </Button>
+                  <div className="flex-1 text-xs text-muted-foreground">
+                    Click to choose a different icon
+                  </div>
+                </div>
+
+                {showEmojiPicker && (
+                  <div className="mt-3 p-3 border rounded-lg bg-muted/50 grid grid-cols-8 gap-2 max-h-40 overflow-y-auto">
+                    {EMOJI_OPTIONS.map((emoji) => (
+                      <Button
+                        key={emoji}
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          handleChange("icon", emoji);
+                          setShowEmojiPicker(false);
+                        }}
+                        className="text-2xl h-auto p-2"
+                      >
+                        {emoji}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Item Name */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Item Name *</Label>
+                <Input
+                  id="edit-name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  placeholder="e.g., MacBook Pro, New Shoes"
+                  required
+                />
+              </div>
+
+              {/* Target Price */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-targetPrice">Target Price (₹) *</Label>
+                <Input
+                  id="edit-targetPrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.targetPrice}
+                  onChange={(e) => handleChange("targetPrice", e.target.value)}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+
+              {/* Category and Priority */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => handleChange("category", value)}
+                  >
+                    <SelectTrigger id="edit-category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-priority">Priority</Label>
+                  <Select
+                    value={formData.priority}
+                    onValueChange={(value) => handleChange("priority", value)}
+                  >
+                    <SelectTrigger id="edit-priority">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={PRIORITY_LEVELS.LOW}>Low</SelectItem>
+                      <SelectItem value={PRIORITY_LEVELS.MEDIUM}>
+                        Medium
+                      </SelectItem>
+                      <SelectItem value={PRIORITY_LEVELS.HIGH}>High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-notes">Notes (Optional)</Label>
+                <Textarea
+                  id="edit-notes"
+                  value={formData.notes}
+                  onChange={(e) => handleChange("notes", e.target.value)}
+                  placeholder="Any additional details..."
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+            </div>
           </ScrollArea>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button
@@ -351,7 +338,8 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
                 Cancel
               </Button>
               <Button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 disabled={isSubmitting}
                 className="flex-1 sm:flex-none"
               >
