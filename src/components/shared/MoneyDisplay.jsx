@@ -44,19 +44,19 @@ export function MoneyDisplay({ moneyData, allocatedAmount = 0 }) {
       iconColor: "text-purple-600 dark:text-purple-400",
       description: "Stocks/Assets",
     },
-    {
-      title: "Unallocated",
-      amount: unallocatedMoney,
-      icon: PiggyBank,
-      gradient: "from-green-500/20 to-green-500/5",
-      iconBg: "bg-green-500/10",
-      iconColor: "text-green-600 dark:text-green-400",
-      description: "Ready to allocate",
-    },
+    // {
+    //   title: "Unallocated",
+    //   amount: unallocatedMoney,
+    //   icon: PiggyBank,
+    //   gradient: "from-green-500/20 to-green-500/5",
+    //   iconBg: "bg-green-500/10",
+    //   iconColor: "text-green-600 dark:text-green-400",
+    //   description: "Ready to allocate",
+    // },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {moneyCards.map((card) => {
         const Icon = card.icon;
 

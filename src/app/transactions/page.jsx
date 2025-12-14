@@ -14,61 +14,71 @@ import {
   ArrowDownCircle,
   Calendar,
 } from "lucide-react";
-import {
-  getTransactions,
-  getMoneyData,
-  getTotalAllocated,
-} from "@/lib/data-manager";
+import { getMoneyData } from "@/lib/api/money";
 import { Navbar } from "@/components/custom/NavBar";
+import { getAllTransactions } from "@/lib/firebase/firestore";
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [moneyData, setMoneyData] = useState({
     totalLiquid: 0,
     totalNonLiquid: 0,
+    totalAllocated: 0,
   });
-  const [totalAllocated, setTotalAllocated] = useState(0);
   const [stats, setStats] = useState({
     totalAdditions: 0,
     totalDeductions: 0,
     transactionCount: 0,
     avgTransaction: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = () => {
-    const txns = getTransactions();
-    const money = getMoneyData();
-    const allocated = getTotalAllocated();
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [txns, money] = await Promise.all([
+        getAllTransactions(),
+        getMoneyData(),
+      ]);
 
-    setTransactions(txns);
-    setMoneyData(money);
-    setTotalAllocated(allocated);
+      setTransactions(txns);
+      setMoneyData({
+        totalLiquid: money.totalLiquid || 0,
+        totalNonLiquid: money.totalNonLiquid || 0,
+        totalAllocated: money.totalAllocated || 0,
+      });
 
-    // Calculate stats
-    const additions = txns.filter((t) => t.amount > 0);
-    const deductions = txns.filter((t) => t.amount < 0);
+      // Calculate stats
+      const additions = txns.filter((t) => t.amount > 0);
+      const deductions = txns.filter((t) => t.amount < 0);
 
-    const totalAdditions = additions.reduce((sum, t) => sum + t.amount, 0);
-    const totalDeductions = Math.abs(
-      deductions.reduce((sum, t) => sum + t.amount, 0)
-    );
-    const avgTransaction =
-      txns.length > 0
-        ? Math.abs(
-            txns.reduce((sum, t) => sum + Math.abs(t.amount), 0) / txns.length
-          )
-        : 0;
+      const totalAdditions = additions.reduce((sum, t) => sum + t.amount, 0);
+      const totalDeductions = Math.abs(
+        deductions.reduce((sum, t) => sum + t.amount, 0)
+      );
+      const avgTransaction =
+        txns.length > 0
+          ? Math.abs(
+              txns.reduce((sum, t) => sum + Math.abs(t.amount), 0) / txns.length
+            )
+          : 0;
 
-    setStats({
-      totalAdditions,
-      totalDeductions,
-      transactionCount: txns.length,
-      avgTransaction,
-    });
+      setStats({
+        totalAdditions,
+        totalDeductions,
+        transactionCount: txns.length,
+        avgTransaction,
+      });
+    } catch (error) {
+      console.error("Error loading data:", error);
+      alert("Failed to load data. Please refresh the page.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUpdate = () => {
@@ -83,13 +93,37 @@ export default function TransactionsPage() {
     }).format(amount);
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar onUpdate={handleUpdate} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading transactions...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar onUpdate={handleUpdate} />
 
-      <main className="container mx-auto max-w-7xl px-4 py-8">
+      <main className="container max-w-7xl mx-auto px-4 py-8">
+        {/* Money Display Cards */}
+        <div className="mb-8">
+          <MoneyDisplay
+            moneyData={moneyData}
+            allocatedAmount={moneyData.totalAllocated}
+          />
+        </div>
+
         {/* Transaction Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
@@ -118,29 +152,19 @@ export default function TransactionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5">
+          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                  <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <ArrowDownCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Total Transactions
-                </p>
+                <p className="text-sm text-muted-foreground">Unallocated</p>
               </div>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {stats.transactionCount}
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {formatCurrency(stats.unallocated)}
               </p>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Money Display Cards */}
-        <div className="mb-8">
-          <MoneyDisplay
-            moneyData={moneyData}
-            allocatedAmount={totalAllocated}
-          />
         </div>
 
         {/* Section Header */}

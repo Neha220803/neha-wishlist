@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   ArrowUpCircle,
@@ -11,7 +11,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { PinVerification } from "@/components/shared/PinVerification";
-import { deleteTransaction } from "@/lib/data-manager";
+import { deleteTransaction } from "@/lib/firebase/firestore";
 
 export function TransactionList({ transactions, onUpdate }) {
   const [showPinDialog, setShowPinDialog] = useState(false);
@@ -22,16 +22,33 @@ export function TransactionList({ transactions, onUpdate }) {
     setShowPinDialog(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (selectedTransaction) {
-      deleteTransaction(selectedTransaction.id);
-      onUpdate();
+  const handleDeleteConfirm = async () => {
+    if (!selectedTransaction) return;
+
+    try {
+      await deleteTransaction(selectedTransaction.id);
       setSelectedTransaction(null);
+
+      if (onUpdate) {
+        onUpdate();
+      }
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      alert("Failed to delete transaction. Please try again.");
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
+  const formatDate = (timestamp) => {
+    // Handle Firebase timestamp
+    let date;
+    if (timestamp?.seconds) {
+      date = new Date(timestamp.seconds * 1000);
+    } else if (timestamp) {
+      date = new Date(timestamp);
+    } else {
+      date = new Date();
+    }
+
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",

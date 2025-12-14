@@ -8,51 +8,52 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { Split, AlertCircle } from "lucide-react";
-import {
-  getWishlistItems,
-  allocateMoneyToItem,
-  getUnallocatedMoney,
-  getMoneyData,
-} from "@/lib/data-manager";
-import { PinVerification } from "@/components/shared/PinVerification";
+import { getWishlistItems } from "@/lib/api/wishlist";
+import { getMoneyData, allocateMoneyToItems } from "@/lib/api/money";
 
 export function AllocateMoneyDialog({ onAllocated, trigger }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [showAllocateDialog, setShowAllocateDialog] = useState(false);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [allocations, setAllocations] = useState({});
   const [unallocatedMoney, setUnallocatedMoney] = useState(0);
   const [totalMoney, setTotalMoney] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (showAllocateDialog) {
+    if (isOpen) {
       loadData();
     }
-  }, [showAllocateDialog]);
+  }, [isOpen]);
 
-  const loadData = () => {
-    const items = getWishlistItems();
-    setWishlistItems(items);
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [items, moneyData] = await Promise.all([
+        getWishlistItems(),
+        getMoneyData(),
+      ]);
 
-    const unallocated = getUnallocatedMoney();
-    setUnallocatedMoney(unallocated);
+      setWishlistItems(items);
+      setUnallocatedMoney(moneyData.unallocated || 0);
+      setTotalMoney(moneyData.totalMoney || 0);
 
-    const { totalLiquid, totalNonLiquid } = getMoneyData();
-    setTotalMoney(totalLiquid + totalNonLiquid);
-
-    // Initialize allocations
-    const initialAllocations = {};
-    items.forEach((item) => {
-      initialAllocations[item.id] = 0;
-    });
-    setAllocations(initialAllocations);
+      // Initialize allocations
+      const initialAllocations = {};
+      items.forEach((item) => {
+        initialAllocations[item.id] = 0;
+      });
+      setAllocations(initialAllocations);
+    } catch (error) {
+      console.error("Error loading data:", error);
+      alert("Failed to load data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAllocationChange = (itemId, value) => {
@@ -85,7 +86,9 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
     setAllocations(newAllocations);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     const totalAllocating = getTotalAllocating();
 
     if (totalAllocating > unallocatedMoney) {
@@ -100,59 +103,51 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
 
     setIsSubmitting(true);
 
-    // Apply allocations
-    Object.entries(allocations).forEach(([itemId, amount]) => {
-      if (amount > 0) {
-        allocateMoneyToItem(itemId, amount);
+    try {
+      // Filter out zero allocations
+      const validAllocations = {};
+      Object.entries(allocations).forEach(([itemId, amount]) => {
+        if (amount > 0) {
+          validAllocations[itemId] = amount;
+        }
+      });
+
+      await allocateMoneyToItems(validAllocations);
+
+      setIsOpen(false);
+
+      if (onAllocated) {
+        onAllocated();
       }
-    });
-
-    setIsSubmitting(false);
-    setShowAllocateDialog(false);
-    setIsOpen(false);
-
-    if (onAllocated) {
-      onAllocated();
+    } catch (error) {
+      console.error("Error allocating money:", error);
+      alert("Failed to allocate money. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
     setAllocations({});
-    setShowAllocateDialog(false);
     setIsOpen(false);
-  };
-
-  const handleTriggerClick = () => {
-    setIsOpen(true);
   };
 
   const remaining = getRemainingMoney();
   const isOverAllocated = remaining < 0;
 
   return (
-    <>
-      {/* Trigger Button */}
-      <div onClick={handleTriggerClick}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline">
             <Split className="w-4 h-4" />
             Allocate Money
           </Button>
         )}
-      </div>
+      </DialogTrigger>
 
-      {/* PIN Verification First */}
-      <PinVerification
-        isOpen={isOpen && !showAllocateDialog}
-        onClose={() => setIsOpen(false)}
-        onSuccess={() => setShowAllocateDialog(true)}
-        title="Verify Identity"
-        description="Enter your PIN to allocate money"
-      />
-
-      {/* Allocate Money Dialog */}
-      <Dialog open={showAllocateDialog} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Allocate Money to Wishlist Items</DialogTitle>
             <DialogDescription>
@@ -160,142 +155,155 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            {/* Money Summary */}
-            <div className="grid grid-cols-3 gap-3 p-4 bg-muted rounded-lg">
-              <div>
-                <div className="text-xs text-muted-foreground">Total Money</div>
-                <div className="text-lg font-bold">
-                  ₹{totalMoney.toFixed(2)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Unallocated</div>
-                <div className="text-lg font-bold text-primary">
-                  ₹{unallocatedMoney.toFixed(2)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Remaining</div>
-                <div
-                  className={`text-lg font-bold ${
-                    isOverAllocated
-                      ? "text-destructive"
-                      : "text-green-600 dark:text-green-400"
-                  }`}
-                >
-                  ₹{remaining.toFixed(2)}
-                </div>
-              </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-
-            {/* Auto Split Button */}
-            {wishlistItems.length > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAutoSplit}
-                className="w-full gap-2"
-              >
-                <Split className="w-4 h-4" />
-                Auto-Split Equally
-              </Button>
-            )}
-
-            {/* Allocation List */}
-            {wishlistItems.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No wishlist items to allocate money to.</p>
-                <p className="text-sm">Add items to your wishlist first.</p>
+          ) : (
+            <div className="space-y-4 py-4">
+              {/* Money Summary */}
+              <div className="grid grid-cols-3 gap-3 p-4 bg-muted rounded-lg">
+                <div>
+                  <div className="text-xs text-muted-foreground">
+                    Total Money
+                  </div>
+                  <div className="text-lg font-bold">
+                    ${totalMoney.toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">
+                    Unallocated
+                  </div>
+                  <div className="text-lg font-bold text-primary">
+                    ${unallocatedMoney.toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Remaining</div>
+                  <div
+                    className={`text-lg font-bold ${
+                      isOverAllocated
+                        ? "text-destructive"
+                        : "text-green-600 dark:text-green-400"
+                    }`}
+                  >
+                    ${remaining.toFixed(2)}
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {wishlistItems.map((item) => {
-                  const remaining =
-                    item.targetPrice - (item.allocatedAmount || 0);
-                  const currentAllocation = allocations[item.id] || 0;
 
-                  return (
-                    <div
-                      key={item.id}
-                      className="p-4 border rounded-lg hover:shadow-sm transition-shadow"
-                    >
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-2xl">{item.icon}</span>
-                            <h4 className="font-medium">{item.name}</h4>
+              {/* Auto Split Button */}
+              {wishlistItems.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAutoSplit}
+                  className="w-full"
+                >
+                  <Split className="w-4 h-4" />
+                  Auto-Split Equally
+                </Button>
+              )}
+
+              {/* Allocation List */}
+              {wishlistItems.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No wishlist items to allocate money to.</p>
+                  <p className="text-sm">Add items to your wishlist first.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {wishlistItems.map((item) => {
+                    const remaining =
+                      item.targetPrice - (item.allocatedAmount || 0);
+                    const currentAllocation = allocations[item.id] || 0;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-4 border rounded-lg hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-2xl">{item.icon}</span>
+                              <h4 className="font-medium">{item.name}</h4>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Target: ${item.targetPrice} • Current: $
+                              {(item.allocatedAmount || 0).toFixed(2)} • Need: $
+                              {remaining.toFixed(2)}
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            Target: ₹{item.targetPrice.toFixed(2)} • Current: ₹
-                            {(item.allocatedAmount || 0).toFixed(2)} • Need: ₹
-                            {remaining.toFixed(2)}
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">
+                              $
+                            </span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={currentAllocation || ""}
+                              onChange={(e) =>
+                                handleAllocationChange(item.id, e.target.value)
+                              }
+                              placeholder="0.00"
+                              className="w-24 px-3 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none text-right"
+                            />
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <Label className="text-sm text-muted-foreground">
-                            ₹
-                          </Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={currentAllocation || ""}
-                            onChange={(e) =>
-                              handleAllocationChange(item.id, e.target.value)
-                            }
-                            placeholder="0.00"
-                            className="w-24 text-right"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div className="relative">
-                        <Progress
-                          value={Math.min(
-                            ((item.allocatedAmount || 0) / item.targetPrice) *
-                              100,
-                            100
-                          )}
-                          className="h-2"
-                        />
-                        {currentAllocation > 0 && (
+                        {/* Progress Bar */}
+                        <div className="relative h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="absolute top-0 h-2 bg-green-500/50 rounded-full transition-all"
+                            className="absolute h-full bg-primary transition-all"
                             style={{
-                              left: `${Math.min(
+                              width: `${Math.min(
                                 ((item.allocatedAmount || 0) /
                                   item.targetPrice) *
                                   100,
                                 100
                               )}%`,
-                              width: `${Math.min(
-                                (currentAllocation / item.targetPrice) * 100,
-                                100 -
-                                  ((item.allocatedAmount || 0) /
-                                    item.targetPrice) *
-                                    100
-                              )}%`,
                             }}
                           />
-                        )}
+                          {currentAllocation > 0 && (
+                            <div
+                              className="absolute h-full bg-green-500 opacity-50"
+                              style={{
+                                left: `${Math.min(
+                                  ((item.allocatedAmount || 0) /
+                                    item.targetPrice) *
+                                    100,
+                                  100
+                                )}%`,
+                                width: `${Math.min(
+                                  (currentAllocation / item.targetPrice) * 100,
+                                  100 -
+                                    ((item.allocatedAmount || 0) /
+                                      item.targetPrice) *
+                                      100
+                                )}%`,
+                              }}
+                            />
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
 
-            {/* Warning if over-allocated */}
-            {isOverAllocated && (
-              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
-                <AlertCircle className="w-4 h-4" />
-                <span>Total allocation exceeds available money!</span>
-              </div>
-            )}
-          </div>
+              {/* Warning if over-allocated */}
+              {isOverAllocated && (
+                <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Total allocation exceeds available money!</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <DialogFooter>
             <Button
@@ -307,17 +315,19 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
               Cancel
             </Button>
             <Button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={
-                isSubmitting || isOverAllocated || getTotalAllocating() === 0
+                isSubmitting ||
+                isOverAllocated ||
+                getTotalAllocating() === 0 ||
+                isLoading
               }
             >
               {isSubmitting ? "Allocating..." : "Allocate Money"}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

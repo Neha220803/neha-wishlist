@@ -4,15 +4,12 @@ import { useState, useEffect } from "react";
 import { MoneyDisplay } from "@/components/shared/MoneyDisplay";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { WishlistCard } from "@/components/wishlist/WishlistCard";
+import { AddItemDialog } from "@/components/wishlist/AddItemDialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Package } from "lucide-react";
-import {
-  getWishlistItems,
-  getMoneyData,
-  getTotalAllocated,
-} from "@/lib/data-manager";
+import { getWishlistItems } from "@/lib/api/wishlist";
+import { getMoneyData } from "@/lib/api/money";
 import { Navbar } from "@/components/custom/NavBar";
-import { AddItemDialog } from "@/components/wishlist/AddItemDialog";
 
 export default function Home() {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -20,14 +17,15 @@ export default function Home() {
   const [moneyData, setMoneyData] = useState({
     totalLiquid: 0,
     totalNonLiquid: 0,
+    totalAllocated: 0,
   });
-  const [totalAllocated, setTotalAllocated] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
     priority: "all",
     category: "all",
     sortBy: "date",
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load data on mount
   useEffect(() => {
@@ -39,14 +37,26 @@ export default function Home() {
     applyFilters();
   }, [wishlistItems, searchTerm, filters]);
 
-  const loadData = () => {
-    const items = getWishlistItems();
-    const money = getMoneyData();
-    const allocated = getTotalAllocated();
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [items, money] = await Promise.all([
+        getWishlistItems(),
+        getMoneyData(),
+      ]);
 
-    setWishlistItems(items);
-    setMoneyData(money);
-    setTotalAllocated(allocated);
+      setWishlistItems(items);
+      setMoneyData({
+        totalLiquid: money.totalLiquid || 0,
+        totalNonLiquid: money.totalNonLiquid || 0,
+        totalAllocated: money.totalAllocated || 0,
+      });
+    } catch (error) {
+      console.error("Error loading data:", error);
+      alert("Failed to load data. Please refresh the page.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const applyFilters = () => {
@@ -90,7 +100,11 @@ export default function Home() {
         break;
       case "date":
       default:
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        filtered.sort((a, b) => {
+          const dateA = a.createdAt?.seconds || 0;
+          const dateB = b.createdAt?.seconds || 0;
+          return dateB - dateA;
+        });
         break;
     }
 
@@ -109,8 +123,24 @@ export default function Home() {
     loadData();
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar onUpdate={handleUpdate} />
+        <main className="container max-w-7xl mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading your wishlist...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen  bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar onUpdate={handleUpdate} />
 
       <main className="container max-w-7xl mx-auto px-4 py-8">
@@ -118,7 +148,7 @@ export default function Home() {
         <div className="mb-8">
           <MoneyDisplay
             moneyData={moneyData}
-            allocatedAmount={totalAllocated}
+            allocatedAmount={moneyData.totalAllocated}
           />
         </div>
 
