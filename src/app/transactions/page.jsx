@@ -114,17 +114,9 @@ export default function TransactionsPage() {
       <Navbar onUpdate={handleUpdate} />
 
       <main className="container max-w-7xl mx-auto px-4 py-8">
-        {/* Money Display Cards */}
-        <div className="mb-8">
-          <MoneyDisplay
-            moneyData={moneyData}
-            allocatedAmount={moneyData.totalAllocated}
-          />
-        </div>
-
         {/* Transaction Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
+          <Card className="bg-linear-to-br from-green-500/10 to-green-500/5">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-lg bg-green-500/10">
@@ -138,7 +130,7 @@ export default function TransactionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5">
+          <Card className="bg-linear-to-br from-red-500/10 to-red-500/5">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-lg bg-red-500/10">
@@ -151,20 +143,14 @@ export default function TransactionsPage() {
               </p>
             </CardContent>
           </Card>
+        </div>
 
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 rounded-lg bg-green-500/10">
-                  <ArrowDownCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-                <p className="text-sm text-muted-foreground">Unallocated</p>
-              </div>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {formatCurrency(stats.unallocated)}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Money Display Cards */}
+        <div className="mb-8">
+          <MoneyDisplay
+            moneyData={moneyData}
+            allocatedAmount={moneyData.totalAllocated}
+          />
         </div>
 
         {/* Section Header */}

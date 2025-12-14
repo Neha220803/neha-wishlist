@@ -59,9 +59,9 @@ export function TransactionList({ transactions, onUpdate }) {
   };
 
   const formatAmount = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
     }).format(Math.abs(amount));
   };
 
@@ -101,7 +101,7 @@ export function TransactionList({ transactions, onUpdate }) {
               key={transaction.id}
               className="hover:shadow-md transition-shadow"
             >
-              <CardContent className="p-4">
+              <CardContent>
                 <div className="flex items-center justify-between gap-4">
                   {/* Icon and Details */}
                   <div className="flex items-center gap-4 flex-1">

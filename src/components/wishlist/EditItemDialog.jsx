@@ -127,6 +127,7 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
       priority: formData.priority,
       category: formData.category,
       notes: formData.notes.trim(),
+      link: formData.link.trim(),
     });
     setShowSavePin(true);
   };

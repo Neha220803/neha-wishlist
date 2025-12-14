@@ -47,7 +47,7 @@ export function WishlistCard({ item, onUpdate }) {
   return (
     <>
       <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-        <CardContent className="p-6">
+        <CardContent>
           {/* Header with Icon and Edit Button */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -132,7 +132,7 @@ export function WishlistCard({ item, onUpdate }) {
               <Progress value={Math.min(progress, 100)} className="h-3" />
               {/* Shimmer Effect Overlay */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
               </div>
             </div>
           </div>

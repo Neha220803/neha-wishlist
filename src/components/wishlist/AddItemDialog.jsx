@@ -105,6 +105,7 @@ export function AddItemDialog({ onItemAdded, trigger }) {
         priority: formData.priority,
         category: formData.category,
         notes: formData.notes.trim(),
+        link: formData.link.trim(),
       };
 
       await addWishlistItem(newItem);
