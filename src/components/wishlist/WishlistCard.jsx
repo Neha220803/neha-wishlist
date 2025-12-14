@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Edit, Target, TrendingUp } from "lucide-react";
 import { EditItemDialog } from "./EditItemDialog";
 import { calculateProgress } from "@/lib/api/wishlist";
@@ -15,9 +16,9 @@ export function WishlistCard({ item, onUpdate }) {
   const remaining = item.targetPrice - allocatedAmount;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       minimumFractionDigits: 2,
     }).format(amount);
   };
@@ -127,12 +128,10 @@ export function WishlistCard({ item, onUpdate }) {
                 {progress.toFixed(1)}%
               </span>
             </div>
-            <div className="relative h-3 bg-muted rounded-full overflow-hidden">
-              <div
-                className={`absolute h-full ${getProgressColor()} transition-all duration-500 ease-out rounded-full`}
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              >
-                {/* Shimmer Effect */}
+            <div className="relative">
+              <Progress value={Math.min(progress, 100)} className="h-3" />
+              {/* Shimmer Effect Overlay */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
               </div>
             </div>
@@ -153,6 +152,33 @@ export function WishlistCard({ item, onUpdate }) {
               <p className="text-xs text-muted-foreground line-clamp-2">
                 {item.notes}
               </p>
+            </div>
+          )}
+
+          {/* Link */}
+          {item.link && (
+            <div className="mt-4 pt-4 border-t">
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+                View Product
+              </a>
             </div>
           )}
         </CardContent>

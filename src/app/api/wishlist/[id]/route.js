@@ -8,7 +8,7 @@ import {
 // GET single wishlist item
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const item = await getWishlistItem(id);
 
     if (!item) {
@@ -31,7 +31,7 @@ export async function GET(request, { params }) {
 // PUT update wishlist item
 export async function PUT(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     const updatedItem = await updateWishlistItem(id, body);
@@ -48,7 +48,7 @@ export async function PUT(request, { params }) {
 // DELETE wishlist item
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     await deleteWishlistItem(id);
     return NextResponse.json({ success: true, message: "Item deleted" });
   } catch (error) {

@@ -10,6 +10,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2 } from "lucide-react";
 import { updateWishlistItem, deleteWishlistItem } from "@/lib/api/wishlist";
 import { PRIORITY_LEVELS, CATEGORIES } from "@/lib/constants";
@@ -58,10 +69,12 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
     priority: PRIORITY_LEVELS.MEDIUM,
     category: CATEGORIES[0],
     notes: "",
+    link: "",
   });
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showDeletePin, setShowDeletePin] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showSavePin, setShowSavePin] = useState(false);
+  const [showDeletePin, setShowDeletePin] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingChanges, setPendingChanges] = useState(null);
 
@@ -75,6 +88,7 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
         priority: item.priority || PRIORITY_LEVELS.MEDIUM,
         category: item.category || CATEGORIES[0],
         notes: item.notes || "",
+        link: item.link || "",
       });
     }
   }, [isOpen, item]);
@@ -86,9 +100,14 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleClose = () => {
+    setShowEmojiPicker(false);
+    setShowEditDialog(false);
+    setPendingChanges(null);
+    onClose();
+  };
 
+  const handleSubmit = () => {
     if (!formData.name.trim()) {
       alert("Please enter an item name");
       return;
@@ -151,26 +170,32 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
     }
   };
 
-  const handleClose = () => {
-    setShowEmojiPicker(false);
-    setPendingChanges(null);
-    onClose();
-  };
-
   if (!item) return null;
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <form onSubmit={handleSubmit}>
+      {/* PIN Verification First */}
+      <PinVerification
+        isOpen={isOpen && !showEditDialog}
+        onClose={onClose}
+        onSuccess={() => setShowEditDialog(true)}
+        title="Verify Identity"
+        description="Enter your PIN to edit this item"
+      />
+
+      {/* Edit Item Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] p-0">
+          <div className="p-6 pb-0">
             <DialogHeader>
               <DialogTitle>Edit Wishlist Item</DialogTitle>
               <DialogDescription>
                 Make changes to your wishlist item
               </DialogDescription>
             </DialogHeader>
+          </div>
 
+          <ScrollArea className="max-h-[60vh] px-6">
             <div className="space-y-4 py-4">
               {/* Allocated Amount Info */}
               <div className="p-3 bg-muted rounded-lg">
@@ -178,21 +203,22 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
                   Current Savings
                 </div>
                 <div className="text-lg font-bold text-primary">
-                  ${(item.allocatedAmount || 0).toFixed(2)}
+                  ₹{(item.allocatedAmount || 0).toFixed(2)}
                 </div>
               </div>
 
               {/* Icon Picker */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Icon</label>
+              <div className="space-y-2">
+                <Label>Icon</Label>
                 <div className="flex items-center gap-3">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="text-5xl p-3 border-2 border-dashed border-border rounded-lg hover:border-primary transition-colors"
+                    className="text-5xl h-auto p-3 border-2 border-dashed hover:border-primary"
                   >
                     {formData.icon}
-                  </button>
+                  </Button>
                   <div className="flex-1 text-xs text-muted-foreground">
                     Click to choose a different icon
                   </div>
@@ -201,50 +227,40 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
                 {showEmojiPicker && (
                   <div className="mt-3 p-3 border rounded-lg bg-muted/50 grid grid-cols-8 gap-2 max-h-40 overflow-y-auto">
                     {EMOJI_OPTIONS.map((emoji) => (
-                      <button
+                      <Button
                         key={emoji}
                         type="button"
+                        variant="ghost"
                         onClick={() => {
                           handleChange("icon", emoji);
                           setShowEmojiPicker(false);
                         }}
-                        className="text-2xl p-2 hover:bg-background rounded transition-colors"
+                        className="text-2xl h-auto p-2"
                       >
                         {emoji}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 )}
               </div>
 
               {/* Item Name */}
-              <div>
-                <label
-                  htmlFor="edit-name"
-                  className="text-sm font-medium mb-2 block"
-                >
-                  Item Name *
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Item Name *</Label>
+                <Input
                   id="edit-name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="e.g., MacBook Pro, New Shoes"
                   required
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 />
               </div>
 
               {/* Target Price */}
-              <div>
-                <label
-                  htmlFor="edit-targetPrice"
-                  className="text-sm font-medium mb-2 block"
-                >
-                  Target Price ($) *
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="edit-targetPrice">Target Price (₹) *</Label>
+                <Input
                   id="edit-targetPrice"
                   type="number"
                   step="0.01"
@@ -253,72 +269,81 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
                   onChange={(e) => handleChange("targetPrice", e.target.value)}
                   placeholder="0.00"
                   required
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 />
               </div>
 
               {/* Category and Priority */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="edit-category"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Category
-                  </label>
-                  <select
-                    id="edit-category"
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Select
                     value={formData.category}
-                    onChange={(e) => handleChange("category", e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    onValueChange={(value) => handleChange("category", value)}
                   >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger id="edit-category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="edit-priority"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Priority
-                  </label>
-                  <select
-                    id="edit-priority"
+                <div className="space-y-2">
+                  <Label htmlFor="edit-priority">Priority</Label>
+                  <Select
                     value={formData.priority}
-                    onChange={(e) => handleChange("priority", e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    onValueChange={(value) => handleChange("priority", value)}
                   >
-                    <option value={PRIORITY_LEVELS.LOW}>Low</option>
-                    <option value={PRIORITY_LEVELS.MEDIUM}>Medium</option>
-                    <option value={PRIORITY_LEVELS.HIGH}>High</option>
-                  </select>
+                    <SelectTrigger id="edit-priority">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={PRIORITY_LEVELS.LOW}>Low</SelectItem>
+                      <SelectItem value={PRIORITY_LEVELS.MEDIUM}>
+                        Medium
+                      </SelectItem>
+                      <SelectItem value={PRIORITY_LEVELS.HIGH}>High</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="link">Link *</Label>
+                <Input
+                  id="edit-link"
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => handleChange("link", e.target.value)}
+                  placeholder="https://example.com/product"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add a link to the product page
+                </p>
+              </div>
+
               {/* Notes */}
-              <div>
-                <label
-                  htmlFor="edit-notes"
-                  className="text-sm font-medium mb-2 block"
-                >
-                  Notes (Optional)
-                </label>
-                <textarea
+              <div className="space-y-2">
+                <Label htmlFor="edit-notes">Notes (Optional)</Label>
+                <Textarea
                   id="edit-notes"
                   value={formData.notes}
                   onChange={(e) => handleChange("notes", e.target.value)}
                   placeholder="Any additional details..."
                   rows={3}
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
+                  className="resize-none"
                 />
               </div>
             </div>
+          </ScrollArea>
 
+          <div className="p-6 pt-0">
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 type="button"
@@ -342,7 +367,8 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
                   Cancel
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={isSubmitting}
                   className="flex-1 sm:flex-none"
                 >
@@ -350,7 +376,7 @@ export function EditItemDialog({ item, isOpen, onClose, onUpdate }) {
                 </Button>
               </div>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 

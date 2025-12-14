@@ -9,7 +9,7 @@ import {
 // DELETE transaction (and reverse money update)
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // First, get the transaction to reverse the money update
     const transactions = await getAllTransactions();

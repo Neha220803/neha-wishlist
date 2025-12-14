@@ -8,12 +8,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus } from "lucide-react";
 import { addWishlistItem } from "@/lib/api/wishlist";
 import { PRIORITY_LEVELS, CATEGORIES } from "@/lib/constants";
+import { PinVerification } from "@/components/shared/PinVerification";
 
 const EMOJI_OPTIONS = [
   "💻",
@@ -52,6 +63,7 @@ const EMOJI_OPTIONS = [
 
 export function AddItemDialog({ onItemAdded, trigger }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     icon: "🎯",
@@ -59,6 +71,7 @@ export function AddItemDialog({ onItemAdded, trigger }) {
     priority: PRIORITY_LEVELS.MEDIUM,
     category: CATEGORIES[0],
     notes: "",
+    link: "",
   });
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,9 +83,7 @@ export function AddItemDialog({ onItemAdded, trigger }) {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (!formData.name.trim()) {
       alert("Please enter an item name");
       return;
@@ -106,7 +117,10 @@ export function AddItemDialog({ onItemAdded, trigger }) {
         priority: PRIORITY_LEVELS.MEDIUM,
         category: CATEGORIES[0],
         notes: "",
+        link: "",
       });
+      setShowEmojiPicker(false);
+      setShowAddDialog(false);
       setIsOpen(false);
 
       if (onItemAdded) {
@@ -128,178 +142,209 @@ export function AddItemDialog({ onItemAdded, trigger }) {
       priority: PRIORITY_LEVELS.MEDIUM,
       category: CATEGORIES[0],
       notes: "",
+      link: "",
     });
     setShowEmojiPicker(false);
+    setShowAddDialog(false);
     setIsOpen(false);
   };
 
+  const handleTriggerClick = () => {
+    setIsOpen(true);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <>
+      {/* Trigger Button */}
+      <div onClick={handleTriggerClick}>
         {trigger || (
           <Button size="lg" className="gap-2">
             <Plus className="w-5 h-5" />
             Add Wishlist Item
           </Button>
         )}
-      </DialogTrigger>
+      </div>
 
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Add New Wishlist Item</DialogTitle>
-            <DialogDescription>
-              Add something you want to save money for
-            </DialogDescription>
-          </DialogHeader>
+      {/* PIN Verification First */}
+      <PinVerification
+        isOpen={isOpen && !showAddDialog}
+        onClose={() => setIsOpen(false)}
+        onSuccess={() => setShowAddDialog(true)}
+        title="Verify Identity"
+        description="Enter your PIN to add a new item"
+      />
 
-          <div className="space-y-4 py-4">
-            {/* Icon Picker */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">Icon</label>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="text-5xl p-3 border-2 border-dashed border-border rounded-lg hover:border-primary transition-colors"
-                >
-                  {formData.icon}
-                </button>
-                <div className="flex-1 text-xs text-muted-foreground">
-                  Click to choose an icon for your item
-                </div>
-              </div>
-
-              {showEmojiPicker && (
-                <div className="mt-3 p-3 border rounded-lg bg-muted/50 grid grid-cols-8 gap-2 max-h-40 overflow-y-auto">
-                  {EMOJI_OPTIONS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => {
-                        handleChange("icon", emoji);
-                        setShowEmojiPicker(false);
-                      }}
-                      className="text-2xl p-2 hover:bg-background rounded transition-colors"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Item Name */}
-            <div>
-              <label htmlFor="name" className="text-sm font-medium mb-2 block">
-                Item Name *
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="e.g., MacBook Pro, New Shoes, Trip to Japan"
-                required
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-
-            {/* Target Price */}
-            <div>
-              <label
-                htmlFor="targetPrice"
-                className="text-sm font-medium mb-2 block"
-              >
-                Target Price ($) *
-              </label>
-              <input
-                id="targetPrice"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.targetPrice}
-                onChange={(e) => handleChange("targetPrice", e.target.value)}
-                placeholder="0.00"
-                required
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-
-            {/* Category and Priority */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="category"
-                  className="text-sm font-medium mb-2 block"
-                >
-                  Category
-                </label>
-                <select
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => handleChange("category", e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="priority"
-                  className="text-sm font-medium mb-2 block"
-                >
-                  Priority
-                </label>
-                <select
-                  id="priority"
-                  value={formData.priority}
-                  onChange={(e) => handleChange("priority", e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                >
-                  <option value={PRIORITY_LEVELS.LOW}>Low</option>
-                  <option value={PRIORITY_LEVELS.MEDIUM}>Medium</option>
-                  <option value={PRIORITY_LEVELS.HIGH}>High</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label htmlFor="notes" className="text-sm font-medium mb-2 block">
-                Notes (Optional)
-              </label>
-              <textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => handleChange("notes", e.target.value)}
-                placeholder="Any additional details about this item..."
-                rows={3}
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none"
-              />
-            </div>
+      {/* Add Item Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] p-0">
+          <div className="p-6 pb-0">
+            <DialogHeader>
+              <DialogTitle>Add New Wishlist Item</DialogTitle>
+              <DialogDescription>
+                Add something you want to save money for
+              </DialogDescription>
+            </DialogHeader>
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Item"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          <ScrollArea className="max-h-[60vh] px-6">
+            <div className="space-y-4 py-4">
+              {/* Icon Picker */}
+              <div className="space-y-2">
+                <Label>Icon</Label>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="text-5xl h-auto p-3 border-2 border-dashed hover:border-primary"
+                  >
+                    {formData.icon}
+                  </Button>
+                  <div className="flex-1 text-xs text-muted-foreground">
+                    Click to choose an icon for your item
+                  </div>
+                </div>
+
+                {showEmojiPicker && (
+                  <div className="mt-3 p-3 border rounded-lg bg-muted/50 grid grid-cols-8 gap-2 max-h-40 overflow-y-auto">
+                    {EMOJI_OPTIONS.map((emoji) => (
+                      <Button
+                        key={emoji}
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          handleChange("icon", emoji);
+                          setShowEmojiPicker(false);
+                        }}
+                        className="text-2xl h-auto p-2"
+                      >
+                        {emoji}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Item Name */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Item Name *</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  placeholder="e.g., MacBook Pro, New Shoes, Trip to Japan"
+                  required
+                />
+              </div>
+
+              {/* Target Price */}
+              <div className="space-y-2">
+                <Label htmlFor="targetPrice">Target Price (₹) *</Label>
+                <Input
+                  id="targetPrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.targetPrice}
+                  onChange={(e) => handleChange("targetPrice", e.target.value)}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+
+              {/* Category and Priority */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => handleChange("category", value)}
+                  >
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <Select
+                    value={formData.priority}
+                    onValueChange={(value) => handleChange("priority", value)}
+                  >
+                    <SelectTrigger id="priority">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={PRIORITY_LEVELS.LOW}>Low</SelectItem>
+                      <SelectItem value={PRIORITY_LEVELS.MEDIUM}>
+                        Medium
+                      </SelectItem>
+                      <SelectItem value={PRIORITY_LEVELS.HIGH}>High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {/* Link */}
+              <div className="space-y-2">
+                <Label htmlFor="link">Link *</Label>
+                <Input
+                  id="link"
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => handleChange("link", e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add a link to the product page
+                </p>
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => handleChange("notes", e.target.value)}
+                  placeholder="Any additional details about this item..."
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+          </ScrollArea>
+
+          <div className="p-6 pt-0">
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Adding..." : "Add Item"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

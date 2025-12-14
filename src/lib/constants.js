@@ -38,3 +38,7 @@ export const STORAGE_KEYS = {
   MONEY_DATA: "money_data",
   THEME: "theme",
 };
+
+// URL validation regex
+export const URL_REGEX =
+  /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
