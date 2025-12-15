@@ -17,6 +17,7 @@ import { Split, AlertCircle } from "lucide-react";
 import { getWishlistItems } from "@/lib/api/wishlist";
 import { getMoneyData, allocateMoneyToItems } from "@/lib/api/money";
 import { PinVerification } from "@/components/shared/PinVerification";
+import { Card, CardContent } from "../ui/card";
 
 export function AllocateMoneyDialog({ onAllocated, trigger }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -166,7 +167,7 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
 
       {/* Allocate Money Dialog */}
       <Dialog open={showAllocateDialog} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Allocate Money to Wishlist Items</DialogTitle>
             <DialogDescription>
@@ -179,26 +180,26 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-">
               {/* Money Summary */}
-              <div className="grid grid-cols-3 gap-3 p-4 bg-muted rounded-lg">
-                <div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted rounded-lg">
+                <div className="col-span-2 md:col-span-1 md:text-center text-center">
                   <div className="text-xs text-muted-foreground">
                     Total Money
                   </div>
-                  <div className="text-lg font-bold">
+                  <div className="text-lg font-bold text-primary">
                     ₹{totalMoney.toFixed(2)}
                   </div>
                 </div>
-                <div>
+                <div className="text-center">
                   <div className="text-xs text-muted-foreground">
                     Unallocated
                   </div>
-                  <div className="text-lg font-bold text-primary">
+                  <div className="text-lg font-bold text-red-500 dark:text-red-400">
                     ₹{unallocatedMoney.toFixed(2)}
                   </div>
                 </div>
-                <div>
+                <div className="md:text-center text-end">
                   <div className="text-xs text-muted-foreground">Remaining</div>
                   <div
                     className={`text-lg font-bold ${
@@ -239,73 +240,80 @@ export function AllocateMoneyDialog({ onAllocated, trigger }) {
                     const currentAllocation = allocations[item.id] || 0;
 
                     return (
-                      <div
+                      <Card
                         key={item.id}
-                        className="p-4 border rounded-lg hover:shadow-sm transition-shadow"
+                        className="hover:shadow-sm transition-shadow"
                       >
-                        <div className="flex items-start justify-between gap-4 mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-2xl">{item.icon}</span>
-                              <h4 className="font-medium">{item.name}</h4>
+                        <CardContent>
+                          <div className="flex md:flex-row flex-col items-start justify-between md:gap-4">
+                            <div className="flex w-full">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-2xl">{item.icon}</span>
+                                <h4 className="font-medium">{item.name}</h4>
+                              </div>
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              Target: ₹{item.targetPrice.toFixed(2)} • Current:
-                              ₹{(item.allocatedAmount || 0).toFixed(2)} • Need:
-                              ₹{remaining.toFixed(2)}
+
+                            <div className="flex justify-end w-full items-center gap-2">
+                              <Label className="text-sm text-muted-foreground">
+                                ₹
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={currentAllocation || ""}
+                                onChange={(e) =>
+                                  handleAllocationChange(
+                                    item.id,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="0.00"
+                                className="w-15 md:w-24 text-right"
+                              />
                             </div>
                           </div>
+                          <div className="text-sm text-muted-foreground  mb-3">
+                            Target: ₹{item.targetPrice.toFixed(2)} • Current: ₹
+                            {(item.allocatedAmount || 0).toFixed(2)} • Need: ₹
+                            {remaining.toFixed(2)}
+                          </div>
 
-                          <div className="flex items-center gap-2">
-                            <Label className="text-sm text-muted-foreground">
-                              ₹
-                            </Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={currentAllocation || ""}
-                              onChange={(e) =>
-                                handleAllocationChange(item.id, e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-24 text-right"
+                          {/* Progress Bar */}
+                          <div className="relative">
+                            <Progress
+                              value={Math.min(
+                                ((item.allocatedAmount || 0) /
+                                  item.targetPrice) *
+                                  100,
+                                100
+                              )}
+                              className="h-2"
                             />
-                          </div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="relative">
-                          <Progress
-                            value={Math.min(
-                              ((item.allocatedAmount || 0) / item.targetPrice) *
-                                100,
-                              100
-                            )}
-                            className="h-2"
-                          />
-                          {currentAllocation > 0 && (
-                            <div
-                              className="absolute top-0 h-2 bg-green-500/50 rounded-full transition-all"
-                              style={{
-                                left: `${Math.min(
-                                  ((item.allocatedAmount || 0) /
-                                    item.targetPrice) *
-                                    100,
-                                  100
-                                )}%`,
-                                width: `${Math.min(
-                                  (currentAllocation / item.targetPrice) * 100,
-                                  100 -
+                            {currentAllocation > 0 && (
+                              <div
+                                className="absolute top-0 h-2 bg-green-500/50 rounded-full transition-all"
+                                style={{
+                                  left: `${Math.min(
                                     ((item.allocatedAmount || 0) /
                                       item.targetPrice) *
-                                      100
-                                )}%`,
-                              }}
-                            />
-                          )}
-                        </div>
-                      </div>
+                                      100,
+                                    100
+                                  )}%`,
+                                  width: `${Math.min(
+                                    (currentAllocation / item.targetPrice) *
+                                      100,
+                                    100 -
+                                      ((item.allocatedAmount || 0) /
+                                        item.targetPrice) *
+                                        100
+                                  )}%`,
+                                }}
+                              />
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
                     );
                   })}
                 </div>

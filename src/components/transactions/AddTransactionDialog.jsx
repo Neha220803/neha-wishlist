@@ -109,7 +109,7 @@ export function AddTransactionDialog({ onTransactionAdded, trigger }) {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             {/* Transaction Type */}
             <div className="space-y-2">
               <Label>Transaction Type</Label>

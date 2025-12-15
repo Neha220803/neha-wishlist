@@ -102,7 +102,7 @@ export function TransactionList({ transactions, onUpdate }) {
               className="hover:shadow-md transition-shadow"
             >
               <CardContent>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex  md:flex-row flex-col justify-between gap-4">
                   {/* Icon and Details */}
                   <div className="flex items-center gap-4 flex-1">
                     {/* Transaction Type Icon */}
@@ -122,14 +122,14 @@ export function TransactionList({ transactions, onUpdate }) {
 
                     {/* Transaction Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex gap-2 mb-1">
                         <p className="font-medium truncate">
                           {transaction.description ||
                             (isAddition ? "Money Added" : "Money Deducted")}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div className="flex  md:flex-row flex-col gap-1 text-sm text-muted-foreground">
                         <span>{formatDate(transaction.createdAt)}</span>
                         <span className="flex items-center gap-1">
                           {getMoneyTypeIcon(transaction.moneyType)}
@@ -140,7 +140,7 @@ export function TransactionList({ transactions, onUpdate }) {
                   </div>
 
                   {/* Amount and Actions */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between gap-3">
                     <div className="text-right">
                       <p
                         className={`text-lg font-bold ${

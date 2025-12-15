@@ -63,7 +63,7 @@ export function MoneyDisplay({ moneyData, allocatedAmount = 0 }) {
         return (
           <Card
             key={card.title}
-            className={`relative overflow-hidden bg-gradient-to-br ${card.gradient} border-none shadow-sm hover:shadow-md transition-all`}
+            className={`relative overflow-hidden bg-linear-to-br ${card.gradient} border-none shadow-sm hover:shadow-md transition-all`}
           >
             <CardContent>
               <div className="flex items-start justify-between mb-4">
@@ -87,7 +87,7 @@ export function MoneyDisplay({ moneyData, allocatedAmount = 0 }) {
               </div>
 
               {/* Decorative Element */}
-              <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-gradient-to-br from-background/40 to-transparent blur-2xl" />
+              <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-linear-to-br from-background/40 to-transparent blur-2xl" />
             </CardContent>
           </Card>
         );

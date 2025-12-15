@@ -177,7 +177,7 @@ export function AddItemDialog({ onItemAdded, trigger }) {
 
       {/* Add Item Dialog */}
       <Dialog open={showAddDialog} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] p-0">
+        <DialogContent className="sm:max-w-lg max-h-[95vh] p-0">
           <div className="p-6 pb-0">
             <DialogHeader>
               <DialogTitle>Add New Wishlist Item</DialogTitle>
@@ -188,7 +188,7 @@ export function AddItemDialog({ onItemAdded, trigger }) {
           </div>
 
           <ScrollArea className="max-h-[60vh] px-6">
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-2">
               {/* Icon Picker */}
               <div className="space-y-2">
                 <Label>Icon</Label>
@@ -197,7 +197,7 @@ export function AddItemDialog({ onItemAdded, trigger }) {
                     type="button"
                     variant="outline"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="text-5xl h-auto p-3 border-2 border-dashed hover:border-primary"
+                    className="text-5xl h-auto items-center p-3 border-2 border-dashed hover:border-primary"
                   >
                     {formData.icon}
                   </Button>
