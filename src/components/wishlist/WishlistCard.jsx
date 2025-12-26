@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Edit, Target, TrendingUp } from "lucide-react";
+import { Edit, ExternalLink, Target, TrendingUp } from "lucide-react";
 import { EditItemDialog } from "./EditItemDialog";
 import { calculateProgress } from "@/lib/api/wishlist";
+import Link from "next/link";
 
 export function WishlistCard({ item, onUpdate }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -158,27 +159,15 @@ export function WishlistCard({ item, onUpdate }) {
           {/* Link */}
           {item.link && (
             <div className="mt-4 pt-4 border-t">
-              <a
+              <Link
                 href={item.link}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
+                <ExternalLink className="w-4 h-4" />
                 View Product
-              </a>
+              </Link>
             </div>
           )}
         </CardContent>
