@@ -11,25 +11,25 @@
   "categories": ["finance", "lifestyle", "productivity"],
   "icons": [
     {
-      "src": "/logo-bg.png",
+      "src": "/logo-with-bg.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo-bg.png",
+      "src": "/logo-with-bg.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/logo-bg.png",
+      "src": "/logo-with-bg.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/logo-bg.png",
+      "src": "/logo-with-bg.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -43,7 +43,7 @@
       "url": "/?action=add",
       "icons": [
         {
-          "src": "/logo-bg.png",
+          "src": "/logo-with-bg.png",
           "sizes": "192x192"
         }
       ]
@@ -55,7 +55,7 @@
       "url": "/?view=progress",
       "icons": [
         {
-          "src": "/logo-bg.png",
+          "src": "/logo-with-bg.png",
           "sizes": "192x192"
         }
       ]

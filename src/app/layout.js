@@ -23,7 +23,7 @@ export const metadata = {
       { url: "/logo-bg.png", sizes: "192x192", type: "image/png" },
       { url: "/logo-bg.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/logo-bg.png", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/logo-with-bg.png", sizes: "180x180", type: "image/png" }],
   },
 
   // PWA Manifest
