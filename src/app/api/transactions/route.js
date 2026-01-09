@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  getAllTransactions,
-  addTransaction,
-  getMoneyData,
-  updateMoneyData,
-} from "@/lib/firebase/firestore";
+import { getAllTransactions, addTransaction } from "@/lib/firebase/firestore";
 
 // GET all transactions
 export async function GET() {
@@ -20,7 +15,7 @@ export async function GET() {
   }
 }
 
-// POST new transaction (and update money data)
+// POST new transaction (no money-data update needed)
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -33,19 +28,8 @@ export async function POST(request) {
       );
     }
 
-    // Add transaction to database
+    // Simply add the transaction - totals will be calculated on-the-fly
     const newTransaction = await addTransaction(body);
-
-    // Update money data based on transaction type
-    const moneyData = await getMoneyData();
-
-    if (body.moneyType === "liquid") {
-      moneyData.totalLiquid = (moneyData.totalLiquid || 0) + body.amount;
-    } else if (body.moneyType === "non-liquid") {
-      moneyData.totalNonLiquid = (moneyData.totalNonLiquid || 0) + body.amount;
-    }
-
-    await updateMoneyData(moneyData);
 
     return NextResponse.json(
       { success: true, data: newTransaction },

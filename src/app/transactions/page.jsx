@@ -7,13 +7,7 @@ import { AddTransactionDialog } from "@/components/transactions/AddTransactionDi
 import { AllocateMoneyDialog } from "@/components/transactions/AllocateMoneyDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Plus,
-  Wallet,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Calendar,
-} from "lucide-react";
+import { Plus, Wallet, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { getMoneyData } from "@/lib/api/money";
 import { Navbar } from "@/components/custom/NavBar";
 import { getAllTransactions } from "@/lib/firebase/firestore";
@@ -24,12 +18,14 @@ export default function TransactionsPage() {
     totalLiquid: 0,
     totalNonLiquid: 0,
     totalAllocated: 0,
+    unallocated: 0,
   });
   const [stats, setStats] = useState({
     totalAdditions: 0,
     totalDeductions: 0,
     transactionCount: 0,
     avgTransaction: 0,
+    unallocated: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,6 +46,7 @@ export default function TransactionsPage() {
         totalLiquid: money.totalLiquid || 0,
         totalNonLiquid: money.totalNonLiquid || 0,
         totalAllocated: money.totalAllocated || 0,
+        unallocated: money.unallocated || 0,
       });
 
       // Calculate stats
@@ -72,6 +69,7 @@ export default function TransactionsPage() {
         totalDeductions,
         transactionCount: txns.length,
         avgTransaction,
+        unallocated: money.unallocated || 0,
       });
     } catch (error) {
       console.error("Error loading data:", error);
@@ -86,9 +84,9 @@ export default function TransactionsPage() {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       minimumFractionDigits: 2,
     }).format(amount);
   };
@@ -97,7 +95,7 @@ export default function TransactionsPage() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar onUpdate={handleUpdate} />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -114,9 +112,17 @@ export default function TransactionsPage() {
       <Navbar onUpdate={handleUpdate} />
 
       <main className="container max-w-7xl mx-auto px-4 py-8">
+        {/* Money Display Cards */}
+        <div className="mb-8">
+          <MoneyDisplay
+            moneyData={moneyData}
+            allocatedAmount={moneyData.totalAllocated}
+          />
+        </div>
+
         {/* Transaction Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
-          <Card className="bg-linear-to-br from-green-500/10 to-green-500/5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-lg bg-green-500/10">
@@ -130,7 +136,7 @@ export default function TransactionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-linear-to-br from-red-500/10 to-red-500/5">
+          <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 rounded-lg bg-red-500/10">
@@ -143,14 +149,20 @@ export default function TransactionsPage() {
               </p>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Money Display Cards */}
-        <div className="mb-8">
-          <MoneyDisplay
-            moneyData={moneyData}
-            allocatedAmount={moneyData.totalAllocated}
-          />
+          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <Wallet className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-sm text-muted-foreground">Unallocated</p>
+              </div>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {formatCurrency(stats.unallocated)}
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Section Header */}
